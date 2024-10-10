@@ -22,7 +22,7 @@ type clientHandshakeStateTLS13 struct {
 	c            *Conn
 	ctx          context.Context
 	serverHello  *serverHelloMsg
-	hello        *clientHelloMsg
+	hello        *ClientHelloMsg
 	keyShareKeys *keySharePrivateKeys
 
 	session     *SessionState

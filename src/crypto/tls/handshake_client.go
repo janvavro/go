@@ -31,7 +31,7 @@ type clientHandshakeState struct {
 	c            *Conn
 	ctx          context.Context
 	serverHello  *serverHelloMsg
-	hello        *clientHelloMsg
+	hello        *ClientHelloMsg
 	suite        *cipherSuite
 	finishedHash finishedHash
 	masterSecret []byte
@@ -41,7 +41,7 @@ type clientHandshakeState struct {
 
 var testingOnlyForceClientHelloSignatureAlgorithms []SignatureScheme
 
-func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echContext, error) {
+func (c *Conn) makeClientHello() (*ClientHelloMsg, *keySharePrivateKeys, *echContext, error) {
 	config := c.config
 	if len(config.ServerName) == 0 && !config.InsecureSkipVerify {
 		return nil, nil, nil, errors.New("tls: either ServerName or InsecureSkipVerify must be specified in the tls.Config")
@@ -65,7 +65,7 @@ func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echCon
 	}
 	maxVersion := config.maxSupportedVersion(roleClient)
 
-	hello := &clientHelloMsg{
+	hello := &ClientHelloMsg{
 		vers:                         maxVersion,
 		compressionMethods:           []uint8{compressionNone},
 		random:                       make([]byte, 32),
@@ -248,7 +248,7 @@ type echContext struct {
 	config          *echConfig
 	hpkeContext     *hpke.Sender
 	encapsulatedKey []byte
-	innerHello      *clientHelloMsg
+	innerHello      *ClientHelloMsg
 	innerTranscript hash.Hash
 	kdfID           uint16
 	aeadID          uint16
@@ -381,7 +381,7 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 	return hs.handshake()
 }
 
-func (c *Conn) loadSession(hello *clientHelloMsg) (
+func (c *Conn) loadSession(hello *ClientHelloMsg) (
 	session *SessionState, earlySecret, binderKey []byte, err error) {
 	if c.config.SessionTicketsDisabled || c.config.ClientSessionCache == nil {
 		return nil, nil, nil, nil
@@ -1279,7 +1279,7 @@ func hostnameInSNI(name string) string {
 	return name
 }
 
-func computeAndUpdatePSK(m *clientHelloMsg, binderKey []byte, transcript hash.Hash, finishedHash func([]byte, hash.Hash) []byte) error {
+func computeAndUpdatePSK(m *ClientHelloMsg, binderKey []byte, transcript hash.Hash, finishedHash func([]byte, hash.Hash) []byte) error {
 	helloBytes, err := m.marshalWithoutBinders()
 	if err != nil {
 		return err

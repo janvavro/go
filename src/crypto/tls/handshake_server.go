@@ -25,7 +25,7 @@ import (
 type serverHandshakeState struct {
 	c            *Conn
 	ctx          context.Context
-	clientHello  *clientHelloMsg
+	clientHello  *ClientHelloMsg
 	hello        *serverHelloMsg
 	suite        *cipherSuite
 	ecdheOk      bool
@@ -130,14 +130,14 @@ func (hs *serverHandshakeState) handshake() error {
 }
 
 // readClientHello reads a ClientHello message and selects the protocol version.
-func (c *Conn) readClientHello(ctx context.Context) (*clientHelloMsg, error) {
-	// clientHelloMsg is included in the transcript, but we haven't initialized
+func (c *Conn) readClientHello(ctx context.Context) (*ClientHelloMsg, error) {
+	// ClientHelloMsg is included in the transcript, but we haven't initialized
 	// it yet. The respective handshake functions will record it themselves.
 	msg, err := c.readHandshake(nil)
 	if err != nil {
 		return nil, err
 	}
-	clientHello, ok := msg.(*clientHelloMsg)
+	clientHello, ok := msg.(*ClientHelloMsg)
 	if !ok {
 		c.sendAlert(alertUnexpectedMessage)
 		return nil, unexpectedMessageError(clientHello, msg)
@@ -949,7 +949,7 @@ func (c *Conn) processCertsFromClient(certificate Certificate) error {
 	return nil
 }
 
-func clientHelloInfo(ctx context.Context, c *Conn, clientHello *clientHelloMsg) *ClientHelloInfo {
+func clientHelloInfo(ctx context.Context, c *Conn, clientHello *ClientHelloMsg) *ClientHelloInfo {
 	supportedVersions := clientHello.supportedVersions
 	if len(clientHello.supportedVersions) == 0 {
 		supportedVersions = supportedVersionsFromMax(clientHello.vers)

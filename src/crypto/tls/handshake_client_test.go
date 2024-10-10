@@ -1491,8 +1491,8 @@ func TestHostnameInSNI(t *testing.T) {
 		c.Close()
 		s.Close()
 
-		var m clientHelloMsg
-		if !m.unmarshal(record) {
+		var m ClientHelloMsg
+		if !m.Unmarshal(record) {
 			t.Errorf("unmarshaling ClientHello for %q failed", tt.in)
 			continue
 		}

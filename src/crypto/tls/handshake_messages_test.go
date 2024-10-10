@@ -18,7 +18,7 @@ import (
 )
 
 var tests = []handshakeMessage{
-	&clientHelloMsg{},
+	&ClientHelloMsg{},
 	&serverHelloMsg{},
 	&finishedMsg{},
 
@@ -68,7 +68,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 				m1 := v.Interface().(handshakeMessage)
 				marshaled := mustMarshal(t, m1)
 				if !m.unmarshal(marshaled) {
-					t.Errorf("#%d failed to unmarshal %#v %x", i, m1, marshaled)
+					t.Errorf("#%d failed to Unmarshal %#v %x", i, m1, marshaled)
 					break
 				}
 
@@ -76,25 +76,25 @@ func TestMarshalUnmarshal(t *testing.T) {
 					m.activeCertHandles = nil
 				}
 
-				if ch, ok := m.(*clientHelloMsg); ok {
+				if ch, ok := m.(*ClientHelloMsg); ok {
 					// extensions is special cased, as it is only populated by the
 					// server-side of a handshake and is not expected to roundtrip
-					// through marshal + unmarshal.  m ends up with the list of
+					// through marshal + Unmarshal.  m ends up with the list of
 					// extensions necessary to serialize the other fields of
-					// clientHelloMsg, so check that it is non-empty, then clear it.
+					// ClientHelloMsg, so check that it is non-empty, then clear it.
 					if len(ch.extensions) == 0 {
-						t.Errorf("expected ch.extensions to be populated on unmarshal")
+						t.Errorf("expected ch.extensions to be populated on Unmarshal")
 					}
 					ch.extensions = nil
 				}
 
-				// clientHelloMsg and serverHelloMsg, when unmarshalled, store
+				// ClientHelloMsg and serverHelloMsg, when unmarshalled, store
 				// their original representation, for later use in the handshake
 				// transcript. In order to prevent DeepEqual from failing since
 				// we didn't create the original message via unmarshalling, nil
 				// the field.
 				switch t := m.(type) {
-				case *clientHelloMsg:
+				case *ClientHelloMsg:
 					t.original = nil
 				case *serverHelloMsg:
 					t.original = nil
@@ -148,8 +148,8 @@ func randomString(n int, rand *rand.Rand) string {
 	return string(b)
 }
 
-func (*clientHelloMsg) Generate(rand *rand.Rand, size int) reflect.Value {
-	m := &clientHelloMsg{}
+func (*ClientHelloMsg) Generate(rand *rand.Rand, size int) reflect.Value {
+	m := &ClientHelloMsg{}
 	m.vers = uint16(rand.Intn(65536))
 	m.random = randomBytes(32, rand)
 	m.sessionId = randomBytes(rand.Intn(32), rand)
@@ -520,7 +520,7 @@ func TestRejectEmptySCTList(t *testing.T) {
 
 	var serverHelloCopy serverHelloMsg
 	if !serverHelloCopy.unmarshal(serverHelloBytes) {
-		t.Fatal("Failed to unmarshal initial message")
+		t.Fatal("Failed to Unmarshal initial message")
 	}
 
 	// Change serverHelloBytes so that the SCT list is empty
@@ -572,8 +572,8 @@ func TestRejectDuplicateExtensions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to decode test ClientHello: %s", err)
 	}
-	var clientHelloCopy clientHelloMsg
-	if clientHelloCopy.unmarshal(clientHelloBytes) {
+	var clientHelloCopy ClientHelloMsg
+	if clientHelloCopy.Unmarshal(clientHelloBytes) {
 		t.Error("Unmarshaled ClientHello with duplicate extensions")
 	}
 

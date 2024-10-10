@@ -177,8 +177,8 @@ func pickECHCipherSuite(suites []echCipher) (echCipher, error) {
 	return echCipher{}, errors.New("tls: no supported symmetric ciphersuites for ECH")
 }
 
-func encodeInnerClientHello(inner *clientHelloMsg, maxNameLength int) ([]byte, error) {
-	h, err := inner.marshalMsg(true)
+func encodeInnerClientHello(inner *ClientHelloMsg, maxNameLength int) ([]byte, error) {
+	h, err := inner.MarshalMsg(true)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func generateOuterECHExt(id uint8, kdfID, aeadID uint16, encodedKey []byte, payl
 	return b.Bytes()
 }
 
-func computeAndUpdateOuterECHExtension(outer, inner *clientHelloMsg, ech *echContext, useKey bool) error {
+func computeAndUpdateOuterECHExtension(outer, inner *ClientHelloMsg, ech *echContext, useKey bool) error {
 	var encapKey []byte
 	if useKey {
 		encapKey = ech.encapsulatedKey

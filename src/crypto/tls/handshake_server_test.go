@@ -44,7 +44,7 @@ func testClientHelloFailure(t *testing.T, serverConfig *Config, m handshakeMessa
 	c, s := localPipe(t)
 	go func() {
 		cli := Client(c, testConfig)
-		if ch, ok := m.(*clientHelloMsg); ok {
+		if ch, ok := m.(*ClientHelloMsg); ok {
 			cli.vers = ch.vers
 		}
 		if _, err := cli.writeHandshakeRecord(m, nil); err != nil {
@@ -104,12 +104,12 @@ func TestRejectBadProtocolVersion(t *testing.T) {
 	config := testConfig.Clone()
 	config.MinVersion = VersionSSL30
 	for _, v := range badProtocolVersions {
-		testClientHelloFailure(t, config, &clientHelloMsg{
+		testClientHelloFailure(t, config, &ClientHelloMsg{
 			vers:   v,
 			random: make([]byte, 32),
 		}, "unsupported versions")
 	}
-	testClientHelloFailure(t, config, &clientHelloMsg{
+	testClientHelloFailure(t, config, &ClientHelloMsg{
 		vers:              VersionTLS12,
 		supportedVersions: badProtocolVersions,
 		random:            make([]byte, 32),
@@ -117,7 +117,7 @@ func TestRejectBadProtocolVersion(t *testing.T) {
 }
 
 func TestNoSuiteOverlap(t *testing.T) {
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{0xff00},
@@ -127,7 +127,7 @@ func TestNoSuiteOverlap(t *testing.T) {
 }
 
 func TestNoCompressionOverlap(t *testing.T) {
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_RSA_WITH_RC4_128_SHA},
@@ -137,7 +137,7 @@ func TestNoCompressionOverlap(t *testing.T) {
 }
 
 func TestNoRC4ByDefault(t *testing.T) {
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_RSA_WITH_RC4_128_SHA},
@@ -151,7 +151,7 @@ func TestNoRC4ByDefault(t *testing.T) {
 }
 
 func TestRejectSNIWithTrailingDot(t *testing.T) {
-	testClientHelloFailure(t, testConfig, &clientHelloMsg{
+	testClientHelloFailure(t, testConfig, &ClientHelloMsg{
 		vers:       VersionTLS12,
 		random:     make([]byte, 32),
 		serverName: "foo.com.",
@@ -161,7 +161,7 @@ func TestRejectSNIWithTrailingDot(t *testing.T) {
 func TestDontSelectECDSAWithRSAKey(t *testing.T) {
 	// Test that, even when both sides support an ECDSA cipher suite, it
 	// won't be selected if the server's private key doesn't support it.
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA},
@@ -187,7 +187,7 @@ func TestDontSelectECDSAWithRSAKey(t *testing.T) {
 func TestDontSelectRSAWithECDSAKey(t *testing.T) {
 	// Test that, even when both sides support an RSA cipher suite, it
 	// won't be selected if the server's private key doesn't support it.
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA},
@@ -210,7 +210,7 @@ func TestDontSelectRSAWithECDSAKey(t *testing.T) {
 }
 
 func TestRenegotiationExtension(t *testing.T) {
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:                         VersionTLS12,
 		compressionMethods:           []uint8{compressionNone},
 		random:                       make([]byte, 32),
@@ -250,7 +250,7 @@ func TestRenegotiationExtension(t *testing.T) {
 	serverHelloLen := int(buf[6])<<16 | int(buf[7])<<8 | int(buf[8])
 
 	var serverHello serverHelloMsg
-	// unmarshal expects to be given the handshake header, but
+	// Unmarshal expects to be given the handshake header, but
 	// serverHelloLen doesn't include it.
 	if !serverHello.unmarshal(buf[5 : 9+serverHelloLen]) {
 		t.Fatalf("Failed to parse ServerHello")
@@ -264,7 +264,7 @@ func TestRenegotiationExtension(t *testing.T) {
 func TestTLS12OnlyCipherSuites(t *testing.T) {
 	// Test that a Server doesn't select a TLS 1.2-only cipher suite when
 	// the client negotiates TLS 1.1.
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:   VersionTLS11,
 		random: make([]byte, 32),
 		cipherSuites: []uint16{
@@ -331,7 +331,7 @@ func TestTLSPointFormats(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			clientHello := &clientHelloMsg{
+			clientHello := &ClientHelloMsg{
 				vers:               VersionTLS12,
 				random:             make([]byte, 32),
 				cipherSuites:       tt.cipherSuites,
@@ -927,7 +927,7 @@ func TestHandshakeServerKeySharePreference(t *testing.T) {
 // that's not in the supported groups list.
 func TestHandshakeServerUnsupportedKeyShare(t *testing.T) {
 	pk, _ := ecdh.X25519().GenerateKey(rand.Reader)
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS12,
 		random:             make([]byte, 32),
 		supportedVersions:  []uint16{VersionTLS13},
@@ -1070,7 +1070,7 @@ func TestHandshakeServerSNIGetCertificateNotFound(t *testing.T) {
 
 // TestHandshakeServerGetCertificateExtensions tests to make sure that the
 // Extensions passed to GetCertificate match what we expect based on the
-// clientHelloMsg
+// ClientHelloMsg
 func TestHandshakeServerGetCertificateExtensions(t *testing.T) {
 	const errMsg = "TestHandshakeServerGetCertificateExtensions error"
 	// ensure the test condition inside our GetCertificate callback
@@ -1081,7 +1081,7 @@ func TestHandshakeServerGetCertificateExtensions(t *testing.T) {
 	for _, vers := range testVersions {
 		t.Run(fmt.Sprintf("TLS version %04x", vers), func(t *testing.T) {
 			pk, _ := ecdh.X25519().GenerateKey(rand.Reader)
-			clientHello := &clientHelloMsg{
+			clientHello := &ClientHelloMsg{
 				vers:                         vers,
 				random:                       make([]byte, 32),
 				cipherSuites:                 []uint16{TLS_CHACHA20_POLY1305_SHA256},
@@ -1092,7 +1092,7 @@ func TestHandshakeServerGetCertificateExtensions(t *testing.T) {
 				supportedSignatureAlgorithms: []SignatureScheme{Ed25519},
 			}
 
-			// the clientHelloMsg initialized just above is serialized with
+			// the ClientHelloMsg initialized just above is serialized with
 			// two extensions: server_name(0) and application_layer_protocol_negotiation(16)
 			expectedExtensions := []uint16{
 				extensionServerName,
@@ -1112,7 +1112,7 @@ func TestHandshakeServerGetCertificateExtensions(t *testing.T) {
 			serverConfig := testConfig.Clone()
 			serverConfig.GetCertificate = func(clientHello *ClientHelloInfo) (*Certificate, error) {
 				if !slices.Equal(expectedExtensions, clientHello.Extensions) {
-					t.Errorf("expected extensions on ClientHelloInfo (%v) to match clientHelloMsg (%v)", expectedExtensions, clientHello.Extensions)
+					t.Errorf("expected extensions on ClientHelloInfo (%v) to match ClientHelloMsg (%v)", expectedExtensions, clientHello.Extensions)
 				}
 				called.Add(1)
 
@@ -1137,7 +1137,7 @@ func TestHandshakeServerSNIGetCertificateError(t *testing.T) {
 		return nil, errors.New(errMsg)
 	}
 
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_RSA_WITH_RC4_128_SHA},
@@ -1158,7 +1158,7 @@ func TestHandshakeServerEmptyCertificates(t *testing.T) {
 	}
 	serverConfig.Certificates = nil
 
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_RSA_WITH_RC4_128_SHA},
@@ -1170,7 +1170,7 @@ func TestHandshakeServerEmptyCertificates(t *testing.T) {
 	// should always return a “no certificates” error.
 	serverConfig.GetCertificate = nil
 
-	clientHello = &clientHelloMsg{
+	clientHello = &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_RSA_WITH_RC4_128_SHA},
@@ -1495,7 +1495,7 @@ func TestClientAuth(t *testing.T) {
 func TestSNIGivenOnFailure(t *testing.T) {
 	const expectedServerName = "test.testing"
 
-	clientHello := &clientHelloMsg{
+	clientHello := &ClientHelloMsg{
 		vers:               VersionTLS10,
 		random:             make([]byte, 32),
 		cipherSuites:       []uint16{TLS_RSA_WITH_RC4_128_SHA},
@@ -1897,7 +1897,7 @@ func TestAESCipherReordering(t *testing.T) {
 					},
 					vers: VersionTLS12,
 				},
-				clientHello: &clientHelloMsg{
+				clientHello: &ClientHelloMsg{
 					cipherSuites: tc.clientCiphers,
 					vers:         VersionTLS12,
 				},
@@ -1995,7 +1995,7 @@ func TestAESCipherReorderingTLS13(t *testing.T) {
 					config: &Config{},
 					vers:   VersionTLS13,
 				},
-				clientHello: &clientHelloMsg{
+				clientHello: &ClientHelloMsg{
 					cipherSuites:       tc.clientCiphers,
 					supportedVersions:  []uint16{VersionTLS13},
 					compressionMethods: []uint8{compressionNone},

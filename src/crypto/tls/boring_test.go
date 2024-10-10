@@ -154,7 +154,7 @@ func TestBoringServerCipherSuites(t *testing.T) {
 		}
 		serverConfig.BuildNameToCertificate()
 		t.Run(fmt.Sprintf("suite=%s", CipherSuiteName(id)), func(t *testing.T) {
-			clientHello := &clientHelloMsg{
+			clientHello := &ClientHelloMsg{
 				vers:                         VersionTLS12,
 				random:                       make([]byte, 32),
 				cipherSuites:                 []uint16{id},
@@ -308,7 +308,7 @@ func TestBoringClientHello(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hello, ok := msg.(*clientHelloMsg)
+	hello, ok := msg.(*ClientHelloMsg)
 	if !ok {
 		t.Fatalf("unexpected message type %T", msg)
 	}

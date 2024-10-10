@@ -1523,8 +1523,8 @@ type handshakeMessageWithOriginalBytes interface {
 	handshakeMessage
 
 	// originalBytes should return the original bytes that were passed to
-	// unmarshal to create the message. If the message was not produced by
-	// unmarshal, it should return nil.
+	// Unmarshal to create the message. If the message was not produced by
+	// Unmarshal, it should return nil.
 	originalBytes() []byte
 }
 

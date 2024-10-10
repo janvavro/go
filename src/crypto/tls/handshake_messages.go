@@ -68,7 +68,7 @@ func readUint24LengthPrefixed(s *cryptobyte.String, out *[]byte) bool {
 	return s.ReadUint24LengthPrefixed((*cryptobyte.String)(out))
 }
 
-type clientHelloMsg struct {
+type ClientHelloMsg struct {
 	original                         []byte
 	vers                             uint16
 	random                           []byte
@@ -101,7 +101,7 @@ type clientHelloMsg struct {
 	extensions []uint16
 }
 
-func (m *clientHelloMsg) marshalMsg(echInner bool) ([]byte, error) {
+func (m *ClientHelloMsg) MarshalMsg(echInner bool) ([]byte, error) {
 	var exts cryptobyte.Builder
 	if len(m.serverName) > 0 {
 		// RFC 6066, Section 3
@@ -372,14 +372,14 @@ func (m *clientHelloMsg) marshalMsg(echInner bool) ([]byte, error) {
 	return b.Bytes()
 }
 
-func (m *clientHelloMsg) marshal() ([]byte, error) {
-	return m.marshalMsg(false)
+func (m *ClientHelloMsg) marshal() ([]byte, error) {
+	return m.MarshalMsg(false)
 }
 
 // marshalWithoutBinders returns the ClientHello through the
 // PreSharedKeyExtension.identities field, according to RFC 8446, Section
 // 4.2.11.2. Note that m.pskBinders must be set to slices of the correct length.
-func (m *clientHelloMsg) marshalWithoutBinders() ([]byte, error) {
+func (m *ClientHelloMsg) marshalWithoutBinders() ([]byte, error) {
 	bindersLen := 2 // uint16 length prefix
 	for _, binder := range m.pskBinders {
 		bindersLen += 1 // uint8 length prefix
@@ -401,7 +401,7 @@ func (m *clientHelloMsg) marshalWithoutBinders() ([]byte, error) {
 
 // updateBinders updates the m.pskBinders field. The supplied binders must have
 // the same length as the current m.pskBinders.
-func (m *clientHelloMsg) updateBinders(pskBinders [][]byte) error {
+func (m *ClientHelloMsg) updateBinders(pskBinders [][]byte) error {
 	if len(pskBinders) != len(m.pskBinders) {
 		return errors.New("tls: internal error: pskBinders length mismatch")
 	}
@@ -415,8 +415,8 @@ func (m *clientHelloMsg) updateBinders(pskBinders [][]byte) error {
 	return nil
 }
 
-func (m *clientHelloMsg) unmarshal(data []byte) bool {
-	*m = clientHelloMsg{original: data}
+func (m *ClientHelloMsg) Unmarshal(data []byte) bool {
+	*m = ClientHelloMsg{original: data}
 	s := cryptobyte.String(data)
 
 	if !s.Skip(4) || // message type and uint24 length field
@@ -675,12 +675,12 @@ func (m *clientHelloMsg) unmarshal(data []byte) bool {
 	return true
 }
 
-func (m *clientHelloMsg) originalBytes() []byte {
+func (m *ClientHelloMsg) originalBytes() []byte {
 	return m.original
 }
 
-func (m *clientHelloMsg) clone() *clientHelloMsg {
-	return &clientHelloMsg{
+func (m *ClientHelloMsg) clone() *ClientHelloMsg {
+	return &ClientHelloMsg{
 		original:                         slices.Clone(m.original),
 		vers:                             m.vers,
 		random:                           slices.Clone(m.random),
@@ -1921,9 +1921,9 @@ type transcriptHash interface {
 // when they are read/written.
 //
 // For most messages, the message is marshalled using their marshal method,
-// since their wire representation is idempotent. For clientHelloMsg and
+// since their wire representation is idempotent. For ClientHelloMsg and
 // serverHelloMsg, we store the original wire representation of the message and
-// use that for hashing, since unmarshal/marshal are not idempotent due to
+// use that for hashing, since Unmarshal/marshal are not idempotent due to
 // extension ordering and other malleable fields, which may cause differences
 // between what was received and what we marshal.
 func transcriptMsg(msg handshakeMessage, h transcriptHash) error {
